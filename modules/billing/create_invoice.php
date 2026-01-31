@@ -1,0 +1,118 @@
+<?php
+include('../../includes/header.php');
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $reservation_id = intval($_POST['reservation_id']);
+    
+    
+    $descriptions = $_POST['desc'];
+    $costs = $_POST['cost'];
+    $total = 0;
+
+    
+    foreach ($costs as $c) {
+        $total += floatval($c);
+    }
+
+    
+    $sql = "INSERT INTO invoices (reservation_id, total_amount) VALUES ('$reservation_id', '$total')";
+    if (mysqli_query($conn, $sql)) {
+        $invoice_id = mysqli_insert_id($conn);
+
+        
+        for ($i = 0; $i < count($descriptions); $i++) {
+            $d = mysqli_real_escape_string($conn, $descriptions[$i]);
+            $c = floatval($costs[$i]);
+            mysqli_query($conn, "INSERT INTO invoice_items (invoice_id, description, amount) VALUES ('$invoice_id', '$d', '$c')");
+        }
+
+        
+        
+
+        echo "<script>window.location.href='reports.php';</script>";
+    }
+}
+?>
+
+<div class="panel" style="max-width: 800px; margin: 0 auto;">
+    <div class="panel-header">
+        <h2>Generate New Invoice</h2>
+        <a href="reports.php" class="btn" style="background: var(--cloud-gray); color: var(--text-dark);">Cancel</a>
+    </div>
+
+    <form method="POST" id="invoiceForm">
+        <!-- 1. Select Client -->
+        <div style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select Client (Reservation)</label>
+            <select name="reservation_id" class="form-control" required>
+                <option value="">-- Choose a Service --</option>
+                <?php
+                
+                $q = mysqli_query($conn, "SELECT id, deceased_name, start_date FROM reservations ORDER BY start_date DESC");
+                while($row = mysqli_fetch_assoc($q)) {
+                    echo "<option value='{$row['id']}'>{$row['deceased_name']} (Service: " . date('M d', strtotime($row['start_date'])) . ")</option>";
+                }
+                ?>
+            </select>
+        </div>
+
+        <!-- 2. Line Items -->
+        <div style="margin-bottom: 10px; font-weight: 600; color: var(--deep-navy);">Billable Items</div>
+        <div id="items-container">
+            <!-- Initial Item Row -->
+            <div class="item-row" style="display: grid; grid-template-columns: 3fr 1fr 50px; gap: 10px; margin-bottom: 10px;">
+                <input type="text" name="desc[]" class="form-control" placeholder="Item Description (e.g. Casket Model X)" required>
+                <input type="number" step="0.01" name="cost[]" class="form-control cost-input" placeholder="0.00" required>
+                <button type="button" class="btn" style="background: #fee2e2; color: #991b1b;" disabled><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <button type="button" class="btn" style="background: var(--cloud-gray); color: var(--deep-navy); margin-bottom: 20px;" onclick="addItem()">
+            <i class="fas fa-plus"></i> Add Another Item
+        </button>
+
+        <!-- 3. Total -->
+        <div style="text-align: right; font-size: 1.2rem; font-weight: 700; color: var(--deep-navy); margin-bottom: 20px;">
+            Total: <span id="displayTotal">₱0.00</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">Generate Invoice</button>
+    </form>
+</div>
+
+<script>
+function addItem() {
+    const container = document.getElementById('items-container');
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.style.cssText = 'display: grid; grid-template-columns: 3fr 1fr 50px; gap: 10px; margin-bottom: 10px;';
+    div.innerHTML = `
+        <input type="text" name="desc[]" class="form-control" placeholder="Item Description" required>
+        <input type="number" step="0.01" name="cost[]" class="form-control cost-input" placeholder="0.00" required>
+        <button type="button" class="btn" style="background: #fee2e2; color: #991b1b;" onclick="this.parentElement.remove(); calcTotal();"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(div);
+    
+    
+    attachInputListeners();
+}
+
+function calcTotal() {
+    let total = 0;
+    document.querySelectorAll('.cost-input').forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    document.getElementById('displayTotal').innerText = '₱' + total.toFixed(2);
+}
+
+function attachInputListeners() {
+    document.querySelectorAll('.cost-input').forEach(input => {
+        input.addEventListener('input', calcTotal);
+    });
+}
+
+
+attachInputListeners();
+</script>
+
+<?php include('../../includes/footer.php'); ?>

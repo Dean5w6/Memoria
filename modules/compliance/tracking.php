@@ -4,12 +4,10 @@ include('../../includes/header.php');
 
 if (isset($_GET['verify'])) {
     $doc_id = intval($_GET['verify']);
-    
-    
-    $stmt = mysqli_prepare($conn, "UPDATE documents SET status='Verified' WHERE id = ?");
-    mysqli_stmt_bind_param($stmt, "i", $doc_id);
-    mysqli_stmt_execute($stmt);
-    echo "<script>window.location.href='tracking.php';</script>";
+    mysqli_query($conn, "UPDATE documents SET status='Verified' WHERE id = $doc_id");
+    $_SESSION['success_msg'] = "Document marked as Verified successfully.";
+    header("Location: tracking.php");
+    exit();
 }
 ?>
 
@@ -20,25 +18,27 @@ if (isset($_GET['verify'])) {
     </div>
     <a href="upload_doc.php" class="btn btn-primary"><i class="fas fa-file-upload"></i> Upload Document</a>
 </div>
+ 
+<?php if (isset($_SESSION['success_msg'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 5px solid #166534;">
+        <i class="fas fa-check-circle"></i> <?= $_SESSION['success_msg']; ?>
+    </div>
+    <?php unset($_SESSION['success_msg']); ?>
+<?php endif; ?>
 
-<div class="dashboard-grid"> 
+<div class="dashboard-grid">
     <?php
-    
     $sql = "SELECT id, deceased_name, start_date FROM reservations WHERE end_date >= CURDATE() ORDER BY start_date ASC";
-    $result = mysqli_query($conn, $sql); 
+    $result = mysqli_query($conn, $sql);
 
     while($row = mysqli_fetch_assoc($result)):
         $res_id = $row['id'];
         
         
         $docs = [];
-        $stmt_docs = mysqli_prepare($conn, "SELECT document_type, status, id FROM documents WHERE reservation_id = ?");
-        mysqli_stmt_bind_param($stmt_docs, "i", $res_id);
-        mysqli_stmt_execute($stmt_docs);
-        $res_docs = mysqli_stmt_get_result($stmt_docs);
-        
+        $res_docs = mysqli_query($conn, "SELECT * FROM documents WHERE reservation_id = $res_id");
         while($d = mysqli_fetch_assoc($res_docs)) {
-            $docs[$d['document_type']] = $d;
+            $docs[$d['document_type']] = $d; 
         }
 
         
@@ -54,41 +54,36 @@ if (isset($_GET['verify'])) {
         </div>
 
         <div style="display: grid; gap: 10px;"> 
+            <?php 
+            $required_docs = ['Death Certificate', 'Burial Permit'];
+            foreach($required_docs as $dtype): 
+                $doc_exists = isset($docs[$dtype]);
+                $d_status = $doc_exists ? $docs[$dtype]['status'] : 'Missing';
+                $d_id = $doc_exists ? $docs[$dtype]['id'] : 0;
+                $file = $doc_exists ? $docs[$dtype]['file_path'] : '';
+            ?>
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px;">
-                <span><i class="fas fa-file-medical"></i> Death Certificate</span>
-                <?php if(isset($docs['Death Certificate'])): ?>
-                    <?php if($docs['Death Certificate']['status'] == 'Verified'): ?>
-                        <span style="color: var(--success); font-weight: 600;"><i class="fas fa-check-circle"></i> Verified</span>
-                    <?php else: ?>
-                        <a href="tracking.php?verify=<?= $docs['Death Certificate']['id'] ?>" class="btn" style="padding: 2px 8px; font-size: 0.7rem; background: var(--slate-blue); color: white;">Verify Now</a>
+                <div>
+                    <i class="fas fa-file"></i> <?= $dtype ?>
+                    <?php if(!empty($file)): ?>
+                        <a href="../../uploads/<?= $file ?>" target="_blank" style="font-size: 0.7rem; color: var(--slate-blue); margin-left: 5px;"><i class="fas fa-eye"></i> View</a>
                     <?php endif; ?>
-                <?php else: ?>
-                    <span style="color: var(--danger); font-size: 0.8rem;">Missing</span>
-                <?php endif; ?>
-            </div>
- 
-            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px;">
-                <span><i class="fas fa-scroll"></i> Burial Permit</span>
-                <?php if(isset($docs['Burial Permit'])): ?>
-                    <?php if($docs['Burial Permit']['status'] == 'Verified'): ?>
-                        <span style="color: var(--success); font-weight: 600;"><i class="fas fa-check-circle"></i> Verified</span>
-                    <?php else: ?>
-                        <a href="tracking.php?verify=<?= $docs['Burial Permit']['id'] ?>" class="btn" style="padding: 2px 8px; font-size: 0.7rem; background: var(--slate-blue); color: white;">Verify Now</a>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <span style="color: var(--danger); font-size: 0.8rem;">Missing</span>
-                <?php endif; ?>
-            </div>
-        </div>
+                </div>
 
-        <?php if(!$is_compliant): ?>
-        <div style="margin-top: 15px; background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 6px; font-size: 0.8rem; text-align: center;">
-            <i class="fas fa-exclamation-triangle"></i> <strong>Compliance Alert:</strong> Do not proceed with burial.
+                <div>
+                    <?php if($d_status == 'Verified'): ?>
+                        <span style="color: var(--success); font-weight: 600;"><i class="fas fa-check-circle"></i> Verified</span>
+                    <?php elseif($d_status == 'Pending'): ?>
+                        <a href="edit_doc.php?id=<?= $d_id ?>" title="Edit" style="color: #777; margin-right: 5px;"><i class="fas fa-edit"></i></a>
+                        <a href="tracking.php?verify=<?= $d_id ?>" class="btn" onclick="return confirm('Verify this document? This cannot be undone.');" style="padding: 2px 8px; font-size: 0.7rem; background: var(--slate-blue); color: white;">Verify</a>
+                    <?php else: ?>
+                        <span style="color: var(--danger); font-size: 0.8rem;">Missing</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
         </div>
-        <?php endif; ?>
     </div>
-
     <?php endwhile; ?>
 </div>
-
 <?php include('../../includes/footer.php'); ?>

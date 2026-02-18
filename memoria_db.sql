@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 31, 2026 at 04:28 PM
+-- Generation Time: Feb 18, 2026 at 07:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -45,7 +45,9 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `details`, `ip_address`, `c
 (2, 1, 'Login', 'User logged into the system.', '::1', '2026-01-28 17:23:50'),
 (3, 1, 'Login', 'User logged into the system.', '::1', '2026-01-29 13:56:45'),
 (4, 1, 'Login', 'User logged into the system.', '::1', '2026-01-29 13:58:38'),
-(5, 1, 'Login', 'User logged into the system.', '127.0.0.1', '2026-01-30 00:16:30');
+(5, 1, 'Login', 'User logged into the system.', '127.0.0.1', '2026-01-30 00:16:30'),
+(6, 1, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-04 06:59:15'),
+(7, 1, 'Add Inventory', 'Added Urn: Test Urn', '127.0.0.1', '2026-02-04 07:00:06');
 
 -- --------------------------------------------------------
 
@@ -83,15 +85,16 @@ CREATE TABLE `documents` (
   `document_type` enum('Death Certificate','Burial Permit','Transfer Permit') NOT NULL,
   `reference_number` varchar(100) DEFAULT NULL,
   `status` enum('Pending','Verified','Rejected') DEFAULT 'Pending',
-  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `file_path` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `documents`
 --
 
-INSERT INTO `documents` (`id`, `reservation_id`, `document_type`, `reference_number`, `status`, `uploaded_at`) VALUES
-(1, 1, 'Death Certificate', '12345', 'Verified', '2026-01-29 14:06:10');
+INSERT INTO `documents` (`id`, `reservation_id`, `document_type`, `reference_number`, `status`, `uploaded_at`, `file_path`) VALUES
+(1, 1, 'Death Certificate', '12345', 'Verified', '2026-01-29 14:06:10', NULL);
 
 -- --------------------------------------------------------
 
@@ -330,7 +333,7 @@ ALTER TABLE `vehicles`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `dispatches`
@@ -360,7 +363,7 @@ ALTER TABLE `invoice_items`
 -- AUTO_INCREMENT for table `items`
 --
 ALTER TABLE `items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `payments`

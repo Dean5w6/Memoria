@@ -20,6 +20,7 @@ if (!isset($_SESSION['user_id']) && $current_script != 'login.php') {
     header("Location: " . BASE_URL . "auth/login.php");
     exit();
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -27,22 +28,23 @@ if (!isset($_SESSION['user_id']) && $current_script != 'login.php') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memoria | Mortuary Operations</title>
-     
+      
     <link rel="stylesheet" href="<?= BASE_URL ?>assets/css/style.css">
-    
+     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
 <?php if (isset($_SESSION['user_id'])): ?>
-<header class="main-header"> 
+<header class="main-header">  
     <a href="<?= BASE_URL ?>dashboard.php" class="brand">
         <img src="<?= BASE_URL ?>assets/img/logo.png" alt="Memoria Logo" class="brand-logo">
         MEMORIA
     </a>
-    
+     
     <nav>
         <ul class="nav-links"> 
+             
             <li>
                 <a href="<?= BASE_URL ?>dashboard.php" class="<?= $current_script == 'dashboard.php' ? 'active' : '' ?>">
                     <i class="fas fa-chart-pie"></i> Dashboard
@@ -57,7 +59,8 @@ if (!isset($_SESSION['user_id']) && $current_script != 'login.php') {
                 <a href="<?= BASE_URL ?>modules/scheduling/calendar.php" class="<?= strpos($_SERVER['REQUEST_URI'], 'scheduling') !== false ? 'active' : '' ?>">
                     <i class="fas fa-calendar-alt"></i> Schedule
                 </a>
-            </li>
+            </li> 
+
             <?php if ($_SESSION['role'] == 'Admin' || $_SESSION['role'] == 'Manager'): ?>
             <li>
                 <a href="<?= BASE_URL ?>modules/logistics/dispatch.php" class="<?= strpos($_SERVER['REQUEST_URI'], 'logistics') !== false ? 'active' : '' ?>">
@@ -75,9 +78,23 @@ if (!isset($_SESSION['user_id']) && $current_script != 'login.php') {
                 </a>
             </li>
             <?php endif; ?>
+ 
+            <?php if ($_SESSION['role'] == 'Admin'): ?>
+            <li>
+                <a href="<?= BASE_URL ?>modules/reports/sales_report.php" class="<?= strpos($_SERVER['REQUEST_URI'], 'reports') !== false ? 'active' : '' ?>">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </a>
+            </li>
+            <li>
+                <a href="<?= BASE_URL ?>modules/users/manage_users.php" class="<?= strpos($_SERVER['REQUEST_URI'], 'users') !== false ? 'active' : '' ?>">
+                    <i class="fas fa-users-cog"></i> Users
+                </a>
+            </li>
+            <?php endif; ?>
+
         </ul>
     </nav>
-
+ 
     <div class="user-profile">
         <span style="font-size: 0.9rem; opacity: 0.9;">Hello, <strong><?= htmlspecialchars($_SESSION['full_name']); ?></strong></span>
         <div class="user-avatar">

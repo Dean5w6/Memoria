@@ -1,29 +1,28 @@
 <?php
 include('../../includes/header.php');
 
-// --- 1. HANDLE DELETE ACTION ---
+
 if (isset($_GET['delete'])) {
     $id = intval($_GET['delete']);
-    
-    // Secure Delete using Prepared Statement
     $stmt = mysqli_prepare($conn, "DELETE FROM items WHERE id = ?");
     mysqli_stmt_bind_param($stmt, 'i', $id);
     
     if (mysqli_stmt_execute($stmt)) {
-        // Optional: Add to Audit Log
         if(function_exists('logActivity')) {
             logActivity($conn, $_SESSION['user_id'], "Delete Inventory", "Deleted item ID: $id");
         }
-        echo "<script>alert('Item deleted successfully.'); window.location.href='manage.php';</script>";
+        
+        $_SESSION['success_msg'] = "Item successfully removed from the database.";
     } else {
-        echo "<script>alert('Error deleting item.');</script>";
+        $_SESSION['error_msg'] = "Error deleting item.";
     }
     mysqli_stmt_close($stmt);
+    header("Location: manage.php");
+    exit();
 }
 
-// --- 2. HANDLE CATEGORY FILTER ---
+
 $category = isset($_GET['cat']) ? $_GET['cat'] : 'All';
-// Secure filtering logic
 if ($category == 'All') {
     $sql = "SELECT * FROM items ORDER BY category, item_name ASC";
     $stmt = mysqli_prepare($conn, $sql);
@@ -43,6 +42,14 @@ $result = mysqli_stmt_get_result($stmt);
     </div>
     <a href="add_casket.php" class="btn btn-primary"><i class="fas fa-plus"></i> Add Item</a>
 </div>
+
+<!-- FEEDBACK MESSAGES (Non-Popup) -->
+<?php if (isset($_SESSION['success_msg'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 5px solid #166534;">
+        <i class="fas fa-check-circle"></i> <?= $_SESSION['success_msg']; ?>
+    </div>
+    <?php unset($_SESSION['success_msg']); ?>
+<?php endif; ?>
 
 <!-- Category Tabs -->
 <div style="margin-bottom: 20px;">
@@ -71,11 +78,10 @@ $result = mysqli_stmt_get_result($stmt);
             <?php
             if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
-                    // Low Stock Logic
                     $is_low = $row['stock_quantity'] <= $row['min_stock_level'];
                     $stock_badge = $is_low 
-                        ? "<span style='background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;'><i class='fas fa-exclamation-triangle'></i> Low: {$row['stock_quantity']}</span>" 
-                        : "<span style='background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;'>{$row['stock_quantity']} Units</span>";
+                        ? "<span style='background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;'>Low: {$row['stock_quantity']}</span>" 
+                        : "<span style='background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;'>{$row['stock_quantity']}</span>";
                     
                     echo "<tr>
                         <td style='padding: 15px; border-bottom: 1px solid #eee;'><span style='font-size: 0.8rem; background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px;'>{$row['category']}</span></td>
@@ -84,19 +90,8 @@ $result = mysqli_stmt_get_result($stmt);
                         <td style='padding: 15px; border-bottom: 1px solid #eee;'>₱" . number_format($row['price'], 2) . "</td>
                         <td style='padding: 15px; border-bottom: 1px solid #eee;'>$stock_badge</td>
                         <td style='padding: 15px; border-bottom: 1px solid #eee; text-align: center;'>
-                            <!-- Edit Button -->
-                            <a href='edit_casket.php?id={$row['id']}' class='btn' style='padding: 6px 10px; font-size: 0.8rem; background: #eee; color: var(--deep-navy); margin-right: 5px;' title='Edit Item'>
-                                <i class='fas fa-edit'></i>
-                            </a>
-                            
-                            <!-- DELETE BUTTON -->
-                            <a href='manage.php?delete={$row['id']}' 
-                               onclick='return confirm(\"Are you sure you want to PERMANENTLY delete this item?\");' 
-                               class='btn' 
-                               style='padding: 6px 10px; font-size: 0.8rem; background: #fee2e2; color: #991b1b;' 
-                               title='Delete Item'>
-                                <i class='fas fa-trash'></i>
-                            </a>
+                            <a href='edit_casket.php?id={$row['id']}' class='btn' style='padding: 6px 10px; background: #eee; color: var(--deep-navy); margin-right: 5px;'><i class='fas fa-edit'></i></a>
+                            <a href='manage.php?delete={$row['id']}' onclick='return confirm(\"Permanently delete this item?\");' class='btn' style='padding: 6px 10px; background: #fee2e2; color: #991b1b;'><i class='fas fa-trash'></i></a>
                         </td>
                     </tr>";
                 }
@@ -107,5 +102,4 @@ $result = mysqli_stmt_get_result($stmt);
         </tbody>
     </table>
 </div>
-
 <?php include('../../includes/footer.php'); ?>

@@ -1,7 +1,6 @@
 <?php
 include('../../includes/header.php');
 
-
 if (isset($_GET['pay'])) {
     $inv_id = intval($_GET['pay']);
     mysqli_query($conn, "UPDATE invoices SET status='Paid' WHERE id=$inv_id");
@@ -39,8 +38,20 @@ if (isset($_GET['pay'])) {
 
             if (mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
-                    $statusColor = $row['status'] == 'Paid' ? '#dcfce7' : '#fee2e2';
-                    $statusText = $row['status'] == 'Paid' ? '#166534' : '#991b1b';
+                    
+                    $statusColor = '#fee2e2'; 
+                    $statusText = '#991b1b';
+                    
+                    if ($row['status'] == 'Paid') {
+                        $statusColor = '#dcfce7'; 
+                        $statusText = '#166534';
+                    } elseif ($row['status'] == 'Partial') {
+                        $statusColor = '#fff3cd'; 
+                        $statusText = '#856404';
+                    } else if ($row['status'] == 'Cancelled') {
+                        $statusColor = '#e2e3e5';
+                        $statusText = '#383d41';
+                    }
                     
                     echo "<tr>
                         <td style='padding: 12px; border-bottom: 1px solid #eee;'>INV-" . str_pad($row['id'], 5, '0', STR_PAD_LEFT) . "</td>
@@ -51,12 +62,12 @@ if (isset($_GET['pay'])) {
                             <span style='background: $statusColor; color: $statusText; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;'>{$row['status']}</span>
                         </td>
                         <td style='padding: 12px; border-bottom: 1px solid #eee;'>
-                            <a href='view_invoice.php?id={$row['id']}' target='_blank' class='btn' style='background: var(--cloud-gray); color: var(--deep-navy); padding: 5px 10px; font-size: 0.8rem;'><i class='fas fa-print'></i> Print</a>
-                            ";
-                    if ($row['status'] == 'Unpaid') {
-                        echo "<a href='reports.php?pay={$row['id']}' onclick='return confirm(\"Mark as Paid?\")' class='btn' style='background: var(--slate-blue); color: white; padding: 5px 10px; font-size: 0.8rem; margin-left: 5px;'><i class='fas fa-check'></i> Pay</a>";
-                    }
-                    echo "</td></tr>";
+                            <!-- REMOVED target='_blank' HERE -->
+                            <a href='view_invoice.php?id={$row['id']}' class='btn' style='background: var(--cloud-gray); color: var(--deep-navy); padding: 5px 10px; font-size: 0.8rem;'>
+                                <i class='fas fa-eye'></i> View / Pay
+                            </a>
+                        </td>
+                    </tr>";
                 }
             } else {
                 echo "<tr><td colspan='6' style='padding: 20px; text-align: center; color: #777;'>No invoices found.</td></tr>";

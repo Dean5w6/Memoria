@@ -1,26 +1,19 @@
 <?php 
 include('includes/header.php'); 
-
+$role = $_SESSION['role'];
+ 
 $inv_q = mysqli_query($conn, "SELECT COUNT(*) as total FROM items WHERE stock_quantity <= min_stock_level");
 $low_stock = mysqli_fetch_assoc($inv_q)['total'];
-
 
 $today = date('Y-m-d');
 $sched_q = mysqli_query($conn, "SELECT COUNT(*) as total FROM reservations WHERE DATE(start_date) = '$today'");
 $today_services = mysqli_fetch_assoc($sched_q)['total'];
 
-
 $bill_q = mysqli_query($conn, "SELECT SUM(total_amount) as total FROM invoices WHERE status = 'Unpaid'");
 $unpaid_total = mysqli_fetch_assoc($bill_q)['total'] ?? 0;
 
-
 $fleet_q = mysqli_query($conn, "SELECT COUNT(*) as total FROM vehicles WHERE status = 'In Use'");
 $active_fleet = mysqli_fetch_assoc($fleet_q)['total'];
-
-
-$comp_q = mysqli_query($conn, "SELECT COUNT(*) as total FROM documents WHERE status != 'Verified'");
-$pending_docs = mysqli_fetch_assoc($comp_q)['total'];
-
 ?>
 
 <div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: end;">
@@ -29,15 +22,22 @@ $pending_docs = mysqli_fetch_assoc($comp_q)['total'];
         <p style="color: var(--text-light);">Operational status for <?= date('l, F d, Y'); ?></p>
     </div>
     
-    <?php if($_SESSION['role'] == 'Admin'): ?>
+    <?php if($role == 'Administrator'): ?>
         <a href="modules/admin/audit_trail.php" class="btn" style="background: var(--cloud-gray); color: var(--deep-navy);">
             <i class="fas fa-history"></i> View Audit Log
         </a>
     <?php endif; ?>
 </div>
  
+<?php if (isset($_SESSION['error_msg'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 5px solid #991b1b;">
+        <i class="fas fa-shield-alt"></i> <?= $_SESSION['error_msg']; unset($_SESSION['error_msg']); ?>
+    </div>
+<?php endif; ?>
+ 
 <div class="dashboard-grid">
      
+    <?php if(in_array($role, ['Administrator', 'Inventory Clerk'])): ?>
     <div class="stat-card" style="border-left-color: <?= $low_stock > 0 ? 'var(--danger)' : 'var(--success)' ?>;">
         <div class="stat-content">
             <h3><?= $low_stock ?></h3>
@@ -47,44 +47,44 @@ $pending_docs = mysqli_fetch_assoc($comp_q)['total'];
             <i class="fas fa-box-open"></i>
         </div>
     </div>
- 
+    <?php endif; ?>
+
+    <!-- FRONT DESK: Admin & Front Desk Staff -->
+    <?php if(in_array($role, ['Administrator', 'Front Desk Staff'])): ?>
     <div class="stat-card" style="border-left-color: var(--slate-blue);">
         <div class="stat-content">
             <h3><?= $today_services ?></h3>
             <p>Services Today</p>
         </div>
-        <div class="stat-icon">
-            <i class="fas fa-church"></i>
-        </div>
+        <div class="stat-icon"><i class="fas fa-church"></i></div>
     </div>
- 
+
     <div class="stat-card" style="border-left-color: #f39c12;">
         <div class="stat-content">
             <h3 style="font-size: 1.5rem;">₱<?= number_format($unpaid_total) ?></h3>
             <p>Unpaid Invoices</p>
         </div>
-        <div class="stat-icon" style="color: #f39c12;">
-            <i class="fas fa-file-invoice-dollar"></i>
-        </div>
+        <div class="stat-icon" style="color: #f39c12;"><i class="fas fa-file-invoice-dollar"></i></div>
     </div>
+    <?php endif; ?>
  
+    <?php if(in_array($role, ['Administrator', 'Fleet Coordinator'])): ?>
     <div class="stat-card" style="border-left-color: var(--muted-teal);">
         <div class="stat-content">
             <h3><?= $active_fleet ?></h3>
             <p>Vehicles Dispatched</p>
         </div>
-        <div class="stat-icon" style="color: var(--muted-teal);">
-            <i class="fas fa-truck"></i>
-        </div>
+        <div class="stat-icon" style="color: var(--muted-teal);"><i class="fas fa-truck"></i></div>
     </div>
+    <?php endif; ?>
 </div>
-
+ 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
      
+    <?php if(in_array($role, ['Administrator', 'Front Desk Staff', 'Fleet Coordinator'])): ?>
     <div class="panel">
         <div class="panel-header">
-            <h2><i class="fas fa-calendar-alt"></i> Upcoming Services (Next 7 Days)</h2>
-            <a href="modules/scheduling/calendar.php" class="btn" style="font-size: 0.8rem; padding: 5px 10px; background: #eee;">View Calendar</a>
+            <h2><i class="fas fa-calendar-alt"></i> Upcoming Services</h2>
         </div>
         <table style="width: 100%; border-collapse: collapse;">
             <tbody>
@@ -105,7 +105,9 @@ $pending_docs = mysqli_fetch_assoc($comp_q)['total'];
             </tbody>
         </table>
     </div>
+    <?php endif; ?>
  
+    <?php if(in_array($role, ['Administrator', 'Front Desk Staff'])): ?>
     <div class="panel">
         <div class="panel-header">
             <h2><i class="fas fa-clipboard-check"></i> Pending Docs</h2>
@@ -119,13 +121,12 @@ $pending_docs = mysqli_fetch_assoc($comp_q)['total'];
                     <span style='background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;'>{$row['document_type']}</span>
                 </div>";
             }
-            echo "<div style='margin-top: 10px; text-align: center;'><a href='modules/compliance/tracking.php' style='color: var(--slate-blue); font-size: 0.9rem;'>View All Pending</a></div>";
         } else {
-            echo "<div style='text-align: center; color: var(--success); padding: 20px;'><i class='fas fa-check-circle' style='font-size: 2rem;'></i><br>All Documents Verified</div>";
+            echo "<div style='text-align: center; color: var(--success); padding: 20px;'><i class='fas fa-check-circle' style='font-size: 2rem;'></i><br>All Docs Verified</div>";
         }
         ?>
     </div>
-
+    <?php endif; ?>
 </div>
 
 <?php include('includes/footer.php'); ?>

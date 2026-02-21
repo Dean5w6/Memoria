@@ -5,19 +5,24 @@ require_once('../../config/db.php');
 if (!isset($_SESSION['user_id'])) die("Access Denied");
 $id = intval($_GET['id']);
 
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['pay_amount'])) {
     $amount = floatval($_POST['pay_amount']);
     $user = $_SESSION['user_id'];
-     
+    
+    
     mysqli_query($conn, "INSERT INTO payments (invoice_id, amount, received_by) VALUES ($id, $amount, $user)");
-     
+    
+    
     if(file_exists('../../includes/logger.php')) {
         require_once('../../includes/logger.php');
         logActivity($conn, $_SESSION['user_id'], "Payment Received", "Recorded PHP $amount for Invoice #$id");
     }
     
+    
     $inv = mysqli_fetch_assoc(mysqli_query($conn, "SELECT total_amount FROM invoices WHERE id=$id"));
     $paid = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(amount) as total FROM payments WHERE invoice_id=$id"))['total'];
+    
     
     $new_status = ($paid >= $inv['total_amount']) ? 'Paid' : 'Partial';
     mysqli_query($conn, "UPDATE invoices SET status='$new_status' WHERE id=$id");
@@ -33,6 +38,7 @@ $payments = mysqli_query($conn, "SELECT * FROM payments WHERE invoice_id = $id O
 
 
 $total_paid = 0;
+$paid_history = [];
 while($p = mysqli_fetch_assoc($payments)) { $paid_history[] = $p; $total_paid += $p['amount']; }
 $balance = $inv['total_amount'] - $total_paid;
 ?>
@@ -42,14 +48,22 @@ $balance = $inv['total_amount'] - $total_paid;
 <head>
     <title>Invoice #<?= str_pad($inv['id'], 5, '0', STR_PAD_LEFT) ?></title>
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #525659; padding: 30px; }
-        .paper { background: white; max-width: 800px; margin: 0 auto; padding: 40px; box-shadow: 0 0 20px rgba(0,0,0,0.5); min-height: 800px; position: relative; }
+        body { background: #525659; padding: 30px; font-family: 'Poppins', sans-serif; }
+        .paper { background: white; max-width: 800px; margin: 20px auto; padding: 40px; box-shadow: 0 0 20px rgba(0,0,0,0.5); min-height: 800px; position: relative; }
         .status-stamp { position: absolute; top: 30px; right: 30px; font-size: 2rem; font-weight: bold; color: <?= $balance <= 0 ? 'green' : 'red' ?>; border: 3px solid <?= $balance <= 0 ? 'green' : 'red' ?>; padding: 5px 20px; transform: rotate(-10deg); opacity: 0.6; }
-        @media print { body { background: white; padding: 0; } .no-print { display: none; } .paper { box-shadow: none; margin: 0; width: 100%; max-width: 100%; } }
+        .nav-bar { max-width: 800px; margin: 0 auto; display: flex; justify-content: flex-start; }
+        @media print { body { background: white; padding: 0; } .no-print, .nav-bar { display: none; } .paper { box-shadow: none; margin: 0; width: 100%; max-width: 100%; } }
     </style>
 </head>
 <body>
+ 
+<div class="nav-bar no-print">
+    <a href="reports.php" class="btn" style="background: white; color: #333; margin-bottom: 10px; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Back to Billing
+    </a>
+</div>
 
 <div class="paper">
     <div class="status-stamp"><?= strtoupper($inv['status']) ?></div>

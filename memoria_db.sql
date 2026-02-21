@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 18, 2026 at 07:06 PM
+-- Generation Time: Feb 21, 2026 at 07:55 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -47,7 +47,20 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `details`, `ip_address`, `c
 (4, 1, 'Login', 'User logged into the system.', '::1', '2026-01-29 13:58:38'),
 (5, 1, 'Login', 'User logged into the system.', '127.0.0.1', '2026-01-30 00:16:30'),
 (6, 1, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-04 06:59:15'),
-(7, 1, 'Add Inventory', 'Added Urn: Test Urn', '127.0.0.1', '2026-02-04 07:00:06');
+(7, 1, 'Add Inventory', 'Added Urn: Test Urn', '127.0.0.1', '2026-02-04 07:00:06'),
+(8, 3, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:21:13'),
+(9, 1, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:24:21'),
+(10, 4, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:24:41'),
+(11, 5, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:24:54'),
+(12, 3, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:26:08'),
+(13, 3, 'New Reservation', 'Booked Chapel C (Grand Hall) for John Doe', '127.0.0.1', '2026-02-21 06:26:43'),
+(14, 4, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:29:52'),
+(15, 5, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:30:14'),
+(16, 5, 'Fleet Dispatch', 'Dispatched Vehicle ID 2', '127.0.0.1', '2026-02-21 06:30:59'),
+(17, 5, 'Fleet Dispatch', 'Dispatched Vehicle ID 1', '127.0.0.1', '2026-02-21 06:32:36'),
+(18, 1, 'Login', 'User logged into the system.', '127.0.0.1', '2026-02-21 06:33:46'),
+(19, 1, 'Payment Received', 'Recorded PHP 1000 for Invoice #2', '127.0.0.1', '2026-02-21 06:37:25'),
+(20, 1, 'Payment Received', 'Recorded PHP 4000 for Invoice #2', '127.0.0.1', '2026-02-21 06:37:46');
 
 -- --------------------------------------------------------
 
@@ -71,7 +84,9 @@ CREATE TABLE `dispatches` (
 --
 
 INSERT INTO `dispatches` (`id`, `reservation_id`, `vehicle_id`, `driver_id`, `location_from`, `location_to`, `dispatch_time`, `status`) VALUES
-(1, 1, 1, 2, 'Hospital', 'Church', '2026-01-29 14:00:00', 'Completed');
+(1, 1, 1, 2, 'Hospital', 'Church', '2026-01-29 14:00:00', 'Completed'),
+(2, 2, 2, 2, 'Hospital', 'Test', '2026-02-20 14:30:00', 'Completed'),
+(3, 2, 1, 2, 'Hospital', 'Test', '2026-02-21 14:32:00', 'Completed');
 
 -- --------------------------------------------------------
 
@@ -94,7 +109,9 @@ CREATE TABLE `documents` (
 --
 
 INSERT INTO `documents` (`id`, `reservation_id`, `document_type`, `reference_number`, `status`, `uploaded_at`, `file_path`) VALUES
-(1, 1, 'Death Certificate', '12345', 'Verified', '2026-01-29 14:06:10', NULL);
+(1, 1, 'Death Certificate', '12345', 'Verified', '2026-01-29 14:06:10', NULL),
+(2, 2, 'Death Certificate', '123456', 'Verified', '2026-02-21 06:27:29', '69995051301f3.png'),
+(3, 2, 'Burial Permit', '123456', 'Verified', '2026-02-21 06:27:53', '69995069bcd17.png');
 
 -- --------------------------------------------------------
 
@@ -115,7 +132,8 @@ CREATE TABLE `invoices` (
 --
 
 INSERT INTO `invoices` (`id`, `reservation_id`, `total_amount`, `status`, `created_at`) VALUES
-(1, 1, 5000.00, 'Paid', '2026-01-29 14:07:04');
+(1, 1, 5000.00, 'Paid', '2026-01-29 14:07:04'),
+(2, 2, 5000.00, 'Paid', '2026-02-21 06:36:58');
 
 -- --------------------------------------------------------
 
@@ -135,7 +153,8 @@ CREATE TABLE `invoice_items` (
 --
 
 INSERT INTO `invoice_items` (`id`, `invoice_id`, `description`, `amount`) VALUES
-(1, 1, 'Casket', 5000.00);
+(1, 1, 'Casket', 5000.00),
+(2, 2, 'Casket', 5000.00);
 
 -- --------------------------------------------------------
 
@@ -181,7 +200,9 @@ CREATE TABLE `payments` (
 
 INSERT INTO `payments` (`id`, `invoice_id`, `amount`, `payment_date`, `received_by`) VALUES
 (1, 1, 2000.00, '2026-01-29 22:07:46', 1),
-(2, 1, 3000.00, '2026-01-29 22:08:14', 1);
+(2, 1, 3000.00, '2026-01-29 22:08:14', 1),
+(3, 2, 1000.00, '2026-02-21 14:37:25', 1),
+(4, 2, 4000.00, '2026-02-21 14:37:46', 1);
 
 -- --------------------------------------------------------
 
@@ -203,7 +224,8 @@ CREATE TABLE `reservations` (
 --
 
 INSERT INTO `reservations` (`id`, `chapel_name`, `deceased_name`, `start_date`, `end_date`, `reserved_by`) VALUES
-(1, 'Chapel A (St. Peter)', 'John Doe', '2026-01-29 14:00:00', '2026-01-29 16:00:00', 1);
+(1, 'Chapel A (St. Peter)', 'John Doe', '2026-01-29 14:00:00', '2026-01-29 16:00:00', 1),
+(2, 'Chapel C (Grand Hall)', 'John Doe', '2026-02-22 14:26:00', '2026-02-22 17:26:00', 3);
 
 -- --------------------------------------------------------
 
@@ -216,7 +238,7 @@ CREATE TABLE `users` (
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `full_name` varchar(100) NOT NULL,
-  `role` enum('Admin','Manager','Staff','Driver') NOT NULL,
+  `role` enum('Administrator','Front Desk Staff','Inventory Clerk','Fleet Coordinator','Driver') NOT NULL,
   `contact_info` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -226,8 +248,16 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `full_name`, `role`, `contact_info`, `created_at`) VALUES
-(1, 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'System Administrator', 'Admin', NULL, '2026-01-21 16:39:26'),
-(2, 'driver1', '494d022492052a06f8f81949639a1d148c1051fa3d4e4688fbd96efe649cd382', 'Juan Dela Cruz', 'Driver', NULL, '2026-01-21 17:15:11');
+(1, 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'System Administrator', 'Administrator', NULL, '2026-01-21 16:39:26'),
+(2, 'driver1', '494d022492052a06f8f81949639a1d148c1051fa3d4e4688fbd96efe649cd382', 'Juan Dela Cruz', 'Driver', NULL, '2026-01-21 17:15:11'),
+(3, 'frontdesk', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Sarah (Front Desk)', 'Front Desk Staff', NULL, '2026-02-21 06:11:25'),
+(4, 'inventory', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Mark (Inventory)', 'Inventory Clerk', NULL, '2026-02-21 06:11:25'),
+(5, 'fleet', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'David (Fleet)', 'Fleet Coordinator', NULL, '2026-02-21 06:11:25'),
+(6, 'driver_mike', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Michael (Driver)', 'Driver', NULL, '2026-02-21 06:49:45'),
+(7, 'driver_carlos', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Carlos (Driver)', 'Driver', NULL, '2026-02-21 06:49:45'),
+(8, 'driver_ramon', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Ramon (Driver)', 'Driver', NULL, '2026-02-21 06:49:45'),
+(9, 'driver_luis', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'Luis (Driver)', 'Driver', NULL, '2026-02-21 06:49:45'),
+(10, 'driver_699956996ae4c', '9d3e7db98ac4e367f2e608e87ffc2ddd11fe1c1f74328a5f466853f5d1277b5e', 'Lexes', 'Driver', NULL, '2026-02-21 06:54:17');
 
 -- --------------------------------------------------------
 
@@ -333,31 +363,31 @@ ALTER TABLE `vehicles`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `dispatches`
 --
 ALTER TABLE `dispatches`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `invoices`
 --
 ALTER TABLE `invoices`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `invoice_items`
 --
 ALTER TABLE `invoice_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `items`
@@ -369,19 +399,19 @@ ALTER TABLE `items`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `vehicles`

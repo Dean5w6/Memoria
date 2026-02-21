@@ -1,9 +1,11 @@
 <?php
 include('../../includes/header.php');
-
-
-if($_SESSION['role'] != 'Admin') {
-    echo "<div class='panel'><h3>Access Denied</h3></div>";
+ 
+if($_SESSION['role'] !== 'Administrator') {
+    echo "<div class='panel' style='text-align: center; padding: 50px;'>
+            <h2 style='color: var(--danger);'><i class='fas fa-shield-alt'></i> Access Denied</h2>
+            <p>Only Administrators can view the System Audit Trail.</p>
+          </div>";
     include('../../includes/footer.php');
     exit();
 }
@@ -40,12 +42,12 @@ if($_SESSION['role'] != 'Admin') {
                     echo "<tr>
                         <td style='padding: 12px; border-bottom: 1px solid #eee; color: #777; font-size: 0.85rem;'>" . date('M d, Y H:i:s', strtotime($row['created_at'])) . "</td>
                         <td style='padding: 12px; border-bottom: 1px solid #eee;'>
-                            <strong>{$row['full_name']}</strong><br>
-                            <span style='font-size: 0.8rem; color: var(--slate-blue);'>{$row['role']}</span>
+                            <strong>" . htmlspecialchars($row['full_name']) . "</strong><br>
+                            <span style='font-size: 0.8rem; color: var(--slate-blue);'>" . htmlspecialchars($row['role']) . "</span>
                         </td>
-                        <td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>{$row['action']}</td>
-                        <td style='padding: 12px; border-bottom: 1px solid #eee;'>{$row['details']}</td>
-                        <td style='padding: 12px; border-bottom: 1px solid #eee; font-family: monospace;'>{$row['ip_address']}</td>
+                        <td style='padding: 12px; border-bottom: 1px solid #eee; font-weight: 600;'>" . htmlspecialchars($row['action']) . "</td>
+                        <td style='padding: 12px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($row['details']) . "</td>
+                        <td style='padding: 12px; border-bottom: 1px solid #eee; font-family: monospace; font-size: 0.85rem;'>" . htmlspecialchars($row['ip_address']) . "</td>
                     </tr>";
                 }
             } else {

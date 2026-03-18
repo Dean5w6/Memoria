@@ -1,49 +1,46 @@
 <?php
 include('../../includes/header.php');
-
+ 
 if ($_SESSION['role'] !== 'Administrator') {
     die("Access Denied");
 }
 
-if (!isset($_GET['id'])) {
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header("Location: manage_users.php");
     exit();
 }
 
 $id = intval($_GET['id']);
 $error = "";
-
-$stmt = mysqli_prepare($conn, "SELECT * FROM users WHERE id = ?");
-mysqli_stmt_bind_param($stmt, "i", $id);
-mysqli_stmt_execute($stmt);
-$user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+ 
+$stmt_fetch = mysqli_prepare($conn, "SELECT * FROM users WHERE id = ?");
+mysqli_stmt_bind_param($stmt_fetch, "i", $id);
+mysqli_stmt_execute($stmt_fetch);
+$user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_fetch));
 
 if (!$user) {
     die("User not found.");
 }
-
+ 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = trim($_POST['full_name']);
     $role = $_POST['role'];
     $password = $_POST['password'];
 
-    if (empty($name)) {
-        $error = "Full Name is required.";
+    if (empty($name) || empty($role)) {
+        $error = "Full Name and Role are required.";
     } else {
-        if (!empty($password)) {
-            
+        if (!empty($password)) { 
             $sql = "UPDATE users SET full_name = ?, role = ?, password = SHA2(?, 256) WHERE id = ?";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "sssi", $name, $role, $password, $id);
-        } else {
-            
+            $stmt_update = mysqli_prepare($conn, $sql);
+            mysqli_stmt_bind_param($stmt_update, "sssi", $name, $role, $password, $id);
+        } else { 
             $sql = "UPDATE users SET full_name = ?, role = ? WHERE id = ?";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "ssi", $name, $role, $id);
+            $stmt_update = mysqli_prepare($conn, $sql);
+            mysqli_stmt_bind_param($stmt_update, "ssi", $name, $role, $id);
         }
 
-        if (mysqli_stmt_execute($stmt)) {
-            
+        if (mysqli_stmt_execute($stmt_update)) { 
             if(function_exists('logActivity')) {
                 require_once('../../includes/logger.php');
                 logActivity($conn, $_SESSION['user_id'], "User Update", "Updated account for: " . $user['username']);
@@ -74,12 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <form method="POST" novalidate>
         <div class="form-group">
             <label>Full Name</label>
-            <input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars($user['full_name']); ?>" required>
+            <input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars($user['full_name']); ?>">
         </div>
 
         <div class="form-group">
             <label>Role</label>
-            <select name="role" class="form-control" required>
+            <select name="role" class="form-control">
                 <option value="Front Desk Staff" <?= $user['role'] == 'Front Desk Staff' ? 'selected' : '' ?>>Front Desk Staff</option>
                 <option value="Inventory Clerk" <?= $user['role'] == 'Inventory Clerk' ? 'selected' : '' ?>>Inventory Clerk</option>
                 <option value="Fleet Coordinator" <?= $user['role'] == 'Fleet Coordinator' ? 'selected' : '' ?>>Fleet Coordinator</option>

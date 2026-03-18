@@ -6,28 +6,20 @@ $error = "";
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = trim($_POST['full_name']);
     $role = $_POST['role'];
-    
-    
-    if ($role == 'Driver') {
+    $user = trim($_POST['username']);
+    $pass = $_POST['password'];
+     
+    if (empty($name) || empty($user) || empty($pass) || empty($role)) {
+        $error = "All fields are required.";
+    } else { 
+        $stmt_check = mysqli_prepare($conn, "SELECT id FROM users WHERE username = ?");
+        mysqli_stmt_bind_param($stmt_check, "s", $user);
+        mysqli_stmt_execute($stmt_check);
+        mysqli_stmt_store_result($stmt_check);
         
-        $user = 'driver_' . uniqid(); 
-        $pass = 'no_login_required'; 
-    } else {
-        $user = trim($_POST['username']);
-        $pass = $_POST['password'];
-    }
-    
-    if (empty($name)) {
-        $error = "Full Name is required.";
-    } elseif ($role != 'Driver' && (empty($user) || empty($pass))) {
-        $error = "Username and Password are required for users who log in.";
-    } else {
-        
-        $check = mysqli_query($conn, "SELECT id FROM users WHERE username = '$user'");
-        if (mysqli_num_rows($check) > 0) {
-            $error = "Username already exists.";
-        } else {
-            
+        if (mysqli_stmt_num_rows($stmt_check) > 0) {
+            $error = "Username '$user' already exists. Please choose another.";
+        } else { 
             $stmt = mysqli_prepare($conn, "INSERT INTO users (full_name, username, password, role) VALUES (?, ?, SHA2(?, 256), ?)");
             mysqli_stmt_bind_param($stmt, "ssss", $name, $user, $pass, $role);
             
@@ -59,48 +51,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <form method="POST" novalidate>
         <div class="form-group">
             <label>Full Name</label>
-            <input type="text" name="full_name" class="form-control" placeholder="e.g. Juan Cruz" required>
+            <input type="text" name="full_name" class="form-control" placeholder="e.g. Juan Cruz">
         </div>
         
         <div class="form-group">
             <label>Role</label> 
-            <select name="role" id="roleSelect" class="form-control" onchange="toggleCredentials()" required>
+            <select name="role" class="form-control">
                 <option value="Front Desk Staff">Front Desk Staff</option>
                 <option value="Inventory Clerk">Inventory Clerk</option>
                 <option value="Fleet Coordinator">Fleet Coordinator</option>
                 <option value="Administrator">Administrator</option>
-                <option value="Driver">Driver (No Login Required)</option>
+                <option value="Driver">Driver (Can log in to see schedule)</option>
             </select>
         </div>
- 
-        <div id="credentialsSection">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control">
-            </div>
+  
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control">
         </div>
 
         <button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>
     </form>
 </div>
-
-<script>
-    function toggleCredentials() {
-        const role = document.getElementById('roleSelect').value;
-        const section = document.getElementById('credentialsSection');
-        
-        if (role === 'Driver') {
-            section.style.display = 'none';
-        } else {
-            section.style.display = 'block';
-        }
-    }
-     
-    document.addEventListener('DOMContentLoaded', toggleCredentials);
-</script>
 
 <?php include('../../includes/footer.php'); ?>

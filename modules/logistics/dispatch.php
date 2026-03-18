@@ -71,8 +71,25 @@ if (isset($_GET['complete'])) {
              <div class="form-group"><label>Select Service</label><select name="reservation_id" class="form-control" required><option value="">-- Choose Service --</option><?php $q = mysqli_query($conn, "SELECT r.id, r.deceased_name, r.start_date FROM reservations r WHERE r.start_date >= CURDATE()"); while($row = mysqli_fetch_assoc($q)) { echo "<option value='{$row['id']}'>{$row['deceased_name']} (" . date('M d H:i', strtotime($row['start_date'])) . ")</option>"; } ?></select></div>
              <div class="form-group"><label>Vehicle</label><select name="vehicle_id" class="form-control" required><option value="">-- Available Vehicles --</option><?php $q = mysqli_query($conn, "SELECT * FROM vehicles WHERE status='Available'"); while($row = mysqli_fetch_assoc($q)) { echo "<option value='{$row['id']}'>{$row['vehicle_name']} ({$row['plate_number']})</option>"; } ?></select></div>
              <div class="form-group"><label>Driver</label><select name="driver_id" class="form-control" required><option value="">-- Select Driver --</option><?php $q = mysqli_query($conn, "SELECT id, full_name FROM users WHERE role='Driver'"); while($row = mysqli_fetch_assoc($q)) { echo "<option value='{$row['id']}'>{$row['full_name']}</option>"; } ?></select></div>
-             <div class="form-group"><label>From</label><input type="text" name="loc_from" class="form-control"></div>
-             <div class="form-group"><label>To</label><input type="text" name="loc_to" class="form-control"></div>
+             <div class="form-group">
+                <label>Pick-up From</label>
+                <select name="loc_from" class="form-control">
+                    <option value="Chapel A">Chapel A</option>
+                    <option value="Chapel B">Chapel B</option>
+                    <option value="Taguig District Hospital">Taguig District Hospital</option>
+                    <option value="Client Residence">Client Residence</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Drop-off To</label>
+                <select name="loc_to" class="form-control">
+                    <option value="Heritage Park Cemetery">Heritage Park Cemetery</option>
+                    <option value="Manila Memorial Park">Manila Memorial Park</option>
+                    <option value="Libingan ng mga Bayani">Libingan ng mga Bayani</option>
+                    <option value="Crematorium">Crematorium</option>
+                </select>
+            </div>
              <div class="form-group"><label>Time</label><input type="datetime-local" name="dispatch_time" class="form-control"></div>
              <button type="submit" class="btn btn-primary" style="width: 100%;">Create Dispatch</button>
         </form>

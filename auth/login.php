@@ -1,10 +1,13 @@
 <?php
 session_start();
 require_once('../config/db.php');
-
-
+ 
 if (isset($_SESSION['user_id'])) {
-    header("Location: " . BASE_URL . "dashboard.php");
+    if ($_SESSION['role'] == 'Driver') {
+        header("Location: " . BASE_URL . "modules/logistics/my_schedule.php");
+    } else {
+        header("Location: " . BASE_URL . "dashboard.php");
+    }
     exit();
 }
 
@@ -14,36 +17,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    
     if (empty($username) || empty($password)) {
         $error = "Please enter both username and password.";
     } else {
-        
         $sql = "SELECT id, full_name, role FROM users WHERE username = ? AND password = SHA2(?, 256)";
-        
         if ($stmt = mysqli_prepare($conn, $sql)) {
             mysqli_stmt_bind_param($stmt, "ss", $username, $password);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
 
             if ($row = mysqli_fetch_assoc($result)) {
-                
                 $_SESSION['user_id'] = $row['id'];
                 $_SESSION['username'] = $username;
                 $_SESSION['full_name'] = $row['full_name'];
                 $_SESSION['role'] = $row['role'];
-                $_SESSION['LAST_ACTIVITY'] = time(); 
-                
-                
+                $_SESSION['LAST_ACTIVITY'] = time();
                 
                 if(file_exists('../includes/logger.php')) {
                     require_once('../includes/logger.php');
                     logActivity($conn, $row['id'], "Login", "User logged into the system.");
                 }
-                
-
-                header("Location: " . BASE_URL . "dashboard.php");
+ 
+                if ($row['role'] == 'Driver') {
+                    header("Location: " . BASE_URL . "modules/logistics/my_schedule.php");
+                } else {
+                    header("Location: " . BASE_URL . "dashboard.php");
+                }
                 exit();
+
             } else {
                 $error = "Invalid credentials. Please try again.";
             }
@@ -59,23 +60,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <title>Login | Memoria</title>
-    <link rel="stylesheet" href="<?= BASE_URL ?>assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="login-wrapper">
-        <div class="login-card"> 
-            <img src="<?= BASE_URL ?>assets/img/logo.png" alt="Memoria Logo" class="login-logo">
-            
-            <h2>Welcome Back</h2>
-            <p>Enter your credentials to access the Memoria System</p>
+        <div class="login-card">
+            <img src="<?php echo BASE_URL; ?>assets/img/logo.png" alt="Memoria Logo" class="login-logo">
+            <h2>Staff Portal Login</h2>
+            <p>Enter your credentials to access the system.</p>
             
             <?php if($error): ?>
                 <div style="background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; text-align: left;">
                     <i class="fas fa-exclamation-circle"></i> <?= $error; ?>
                 </div>
             <?php endif; ?>
- 
+            
+            <?php if(isset($_GET['timeout'])): ?>
+                 <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; text-align: left;">
+                    <i class="fas fa-clock"></i> Your session has expired. Please log in again.
+                </div>
+            <?php endif; ?>
+
             <form method="POST" novalidate>
                 <div style="text-align: left; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem;">Username</div>
                 <input type="text" name="username" class="form-control" placeholder="e.g. admin">
